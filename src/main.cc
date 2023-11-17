@@ -17,7 +17,7 @@
 #include "sattypes.h"
 #include "sat.h"
 
-int main(int argc, char **argv) {
+extern "C" int main(int argc, char **argv) {
   Sat *sat = SatFactory();
   if (sat == NULL) {
     logprintf(0, "Process Error: failed to allocate Sat object\n");

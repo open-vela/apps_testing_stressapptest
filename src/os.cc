@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #ifdef HAVE_SYS_SHM_H
+#include <sys/stat.h>
 #include <sys/shm.h>
 #endif
 #include <unistd.h>
@@ -384,6 +385,11 @@ int64 OsLayer::FindHugePages() {
   // available in the system.
   static const char *hugepages_info_file = "/proc/sys/vm/nr_hugepages";
   int hpfile = open(hugepages_info_file, O_RDONLY);
+  if (hpfile < 0) {
+    logprintf(12, "Log: /proc/sys/vm/nr_hugepages "
+                  "open filed\n");
+    return 0;
+  }
 
   ssize_t bytes_read = read(hpfile, buf, 64);
   close(hpfile);
@@ -516,21 +522,27 @@ bool OsLayer::AllocateTestMem(int64 length, uint64 paddr_base) {
               " ignore.\n", paddr_base);
 
   // Determine optimal memory allocation path.
+#ifdef HAVE_SYS_SHM_H
   bool prefer_hugepages = false;
   bool prefer_posix_shm = false;
   bool prefer_dynamic_mapping = false;
+#endif
 
   // Are there enough hugepages?
   int64 hugepagesize = FindHugePages() * 2 * kMegabyte;
   // TODO(nsanders): Is there enough /dev/shm? Is there enough free memeory?
   if ((length >= 1400LL * kMegabyte) && (address_mode_ == 32)) {
+#ifdef HAVE_SYS_SHM_H
     prefer_dynamic_mapping = true;
     prefer_posix_shm = true;
+#endif
     logprintf(3, "Log: Prefer POSIX shared memory allocation.\n");
     logprintf(3, "Log: You may need to run "
                  "'sudo mount -o remount,size=100\% /dev/shm.'\n");
   } else if (hugepagesize >= length) {
+#ifdef HAVE_SYS_SHM_H
     prefer_hugepages = true;
+#endif
     logprintf(3, "Log: Prefer using hugepage allocation.\n");
   } else {
     logprintf(3, "Log: Prefer plain malloc memory allocation.\n");
@@ -562,8 +574,8 @@ bool OsLayer::AllocateTestMem(int64 length, uint64 paddr_base) {
                      "hugepage object - err %d (%s).\n",
                   err, errtxt.c_str());
         if (shmctl(shmid, IPC_RMID, NULL) < 0) {
-          int err = errno;
-          string errtxt = ErrorString(err);
+          err = errno;
+          errtxt = ErrorString(err);
           logprintf(0, "Log: failed to remove shared "
                        "hugepage object - err %d (%s).\n",
                     err, errtxt.c_str());

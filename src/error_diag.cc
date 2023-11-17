@@ -66,7 +66,7 @@ DeviceTree *DeviceTree::UnlockedFindInSubTree(string name) {
     return itr->second;
   } else {
     // Search sub-tree.
-    for (std::map<string, DeviceTree*>::iterator itr = subdevices_.begin();
+    for (itr = subdevices_.begin();
         itr != subdevices_.end();
         ++itr) {
       DeviceTree *result = itr->second->UnlockedFindInSubTree(name);

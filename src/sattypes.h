@@ -97,7 +97,9 @@ void logstop();
   // Note: this code is hacked together to deal with difference
   // function signatures across versions of glibc, ie those that take
   // cpu_set_t versus those that take unsigned long.  -johnhuang
+#if (CONFIG_SMP_NCPUS >= 32)
   typedef uint64 cpu_set_t;
+#endif
   #define CPU_SETSIZE                   (sizeof(cpu_set_t) * 8)
   #define CPU_ISSET(index, cpu_set_ptr) (*(cpu_set_ptr) & 1ull << (index))
   #define CPU_SET(index, cpu_set_ptr)   (*(cpu_set_ptr) |= 1ull << (index))
@@ -106,14 +108,14 @@ void logstop();
 #endif
 
 static inline bool cpuset_isequal(const cpu_set_t *c1, const cpu_set_t *c2) {
-  for (int i = 0; i < CPU_SETSIZE; ++i)
+  for (size_t i = 0; i < CPU_SETSIZE; ++i)
     if ((CPU_ISSET(i, c1) != 0) != (CPU_ISSET(i, c2) != 0))
       return false;
   return true;
 }
 
 static inline bool cpuset_issubset(const cpu_set_t *c1, const cpu_set_t *c2) {
-  for (int i = 0; i < CPU_SETSIZE; ++i)
+  for (size_t i = 0; i < CPU_SETSIZE; ++i)
     if (CPU_ISSET(i, c1) && !CPU_ISSET(i, c2))
       return false;
   return true;
@@ -121,7 +123,7 @@ static inline bool cpuset_issubset(const cpu_set_t *c1, const cpu_set_t *c2) {
 
 static inline int cpuset_count(const cpu_set_t *cpuset) {
   int count = 0;
-  for (int i = 0; i < CPU_SETSIZE; ++i)
+  for (size_t i = 0; i < CPU_SETSIZE; ++i)
     if (CPU_ISSET(i, cpuset))
       ++count;
   return count;
@@ -136,7 +138,7 @@ static inline void cpuset_set_ab(cpu_set_t *cpuset, int a, int b) {
 static inline string cpuset_format(const cpu_set_t *cpuset) {
   string format;
   int digit = 0, last_non_zero_size = 1;
-  for (int i = 0; i < CPU_SETSIZE; ++i) {
+  for (size_t i = 0; i < CPU_SETSIZE; ++i) {
     if (CPU_ISSET(i, cpuset)) {
       digit |= 1 << (i & 3);
     }

@@ -65,6 +65,7 @@
 
 // Syscalls
 // Why ubuntu, do you hate gettid so bad?
+#ifdef syscall
 #if !defined(__NR_gettid)
   #define __NR_gettid             224
 #endif
@@ -75,6 +76,7 @@ _syscall3(int, sched_getaffinity, pid_t, pid,
           unsigned int, len, cpu_set_t*, mask)
 _syscall3(int, sched_setaffinity, pid_t, pid,
           unsigned int, len, cpu_set_t*, mask)
+#endif
 #endif
 
 namespace {
@@ -1837,7 +1839,7 @@ bool FileThread::SectorValidatePage(const struct PageRec &page,
       exit(1);
     } else {
       // Patch up bad pages.
-      for (int block = (firstsector * 512) / page_length;
+      for (block = (firstsector * 512) / page_length;
           block <= (lastsector * 512) / page_length;
           block++) {
         unsigned int *memblock = static_cast<unsigned int *>(dst->addr);

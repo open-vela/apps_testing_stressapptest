@@ -270,7 +270,7 @@ class WorkerThread {
         runduration_usec_ * 1.0 / 1000000.);}
 
   void set_cpu_mask(cpu_set_t *mask) {
-    memcpy(&cpu_mask_, mask, sizeof(*mask));
+    memcpy((void *)&cpu_mask_, (void *)mask, sizeof(*mask));
   }
 
   void set_cpu_mask_to_cpu(int cpu_num) {
