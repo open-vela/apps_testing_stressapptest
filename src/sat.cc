@@ -792,11 +792,10 @@ Sat::~Sat() {
 // This will call exit() given a request for
 // self-documentation or unexpected args.
 bool Sat::ParseArgs(int argc, char **argv) {
-  int i;
   uint64 filesize = page_length_ * disk_pages_;
 
   // Parse each argument.
-  for (i = 1; i < argc; i++) {
+  for (int i = 1; i < argc; i++) {
     // Switch to fall back to corase-grain-lock queue. (for benchmarking)
     ARG_KVALUE("--coarse_grain_lock", pe_q_implementation_, SAT_ONELOCK);
 
